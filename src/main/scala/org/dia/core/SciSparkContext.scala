@@ -225,12 +225,11 @@ class SciSparkContext (@transient val sparkContext: SparkContext) extends Serial
       partitions: Int = defaultPartitions): RDD[SciDataset] = {
 
     val fs = FileSystem.get(new URI(path), new Configuration())
-    val FileStatuses = fs.listStatus(new Path(path))
-    val fileNames = FileStatuses.map(p => p.getPath.getName)
-    val nameRDD = sparkContext.parallelize(fileNames, partitions)
+    val fileStatuses = fs.listStatus(new Path(path))
+    val filesRDD = sparkContext.parallelize(fileStatuses, partitions)
 
-    nameRDD.map(fileName => {
-      val k = NetCDFUtils.loadDFSNetCDFDataSet(path, path + fileName, 4000)
+    filesRDD.map(fileStatus => {
+      val k = NetCDFUtils.loadDFSNetCDFDataSet(path, fileStatus.getPath.toString, 4000)
       varName match {
         case Nil => new SciDataset (k)
         case s : List[String] => new SciDataset(k, s)
