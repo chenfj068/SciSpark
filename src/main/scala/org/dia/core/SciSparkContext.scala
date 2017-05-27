@@ -238,6 +238,32 @@ class SciSparkContext (@transient val sparkContext: SparkContext) extends Serial
   }
 
   /**
+   * Constructs an SRDD from a file of URI's pointing to NetCDF datasets and a list of variable names.
+   *  If no names are provided then all variable arrays in the file are loaded.
+   * The URI could be an OpenDapURL or a filesystem path.
+   *
+   * For reading from HDFS check NetcdfDFSFile.
+   */
+  def netcdfRandomAccessDatasetsWithLocalTmpFile(
+      path: String,
+      varName: List[String] = Nil,
+      partitions: Int = defaultPartitions): RDD[SciDataset] = {
+
+    val fs = FileSystem.get(new URI(path), new Configuration())
+    val FileStatuses = fs.listStatus(new Path(path))
+    val fileNames = FileStatuses.map(p => Path.getPathWithoutSchemeAndAuthority(p.getPath).toString)
+    val nameRDD = sparkContext.parallelize(fileNames, partitions)
+    val tmpPath = sparkContext.getConf.get("spark.local.dir", "/tmp")
+    nameRDD.map(fileName => {
+      val k = NetCDFUtils.loadDFSNetCDFDataSetWithLocalTmpFile(path, fileName, 4000, tmpPath)
+      varName match {
+        case Nil => new SciDataset (k)
+        case s : List[String] => new SciDataset(k, s)
+      }
+    })
+  }
+
+  /**
    * Constructs an RDD given a URI pointing to an HDFS directory of Netcdf files and a list of variable names.
    * Note that since the files are read from HDFS, the binaryFiles function is used which is called
    * from SparkContext. This is why a normal RDD is returned instead of an SRDD.
