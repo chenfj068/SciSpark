@@ -77,9 +77,10 @@ test in assembly := {}
 classpathTypes += "maven-plugin"
 
 libraryDependencies ++= Seq(
+
   "org.scalatest" %% "scalatest" % "3.0.0",
-  "org.apache.spark" %% "spark-core" % sparkVersion,
-  "org.apache.spark" %% "spark-mllib" % sparkVersion,
+  "org.apache.spark" %% "spark-core" % sparkVersion % "provided",
+  "org.apache.spark" %% "spark-mllib" % sparkVersion % "provided",
   // Math Libraries
   // "org.jblas" % "jblas" % "1.2.3",
   // other dependencies here
