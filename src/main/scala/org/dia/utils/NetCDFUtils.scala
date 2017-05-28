@@ -28,7 +28,6 @@ import ucar.nc2.{Attribute, NetcdfFile, Variable}
 import ucar.nc2.dataset.NetcdfDataset
 
 import org.dia.HDFSRandomAccessFile
-import org.dia.HDFSRandomAccessFileWithLocalTmpFile
 
 
 /**
@@ -155,30 +154,6 @@ object NetCDFUtils extends Serializable {
     NetcdfDataset.setUseNaNs(false)
     try {
       val raf = new HDFSRandomAccessFile(dfsUri, location, bufferSize)
-      new NetcdfDataset(NetcdfFile.open(raf, location, null, null))
-    } catch {
-      case e: java.io.IOException =>
-        LOG.error("Couldn't open dataset %s%s".format(dfsUri, location))
-        throw e
-      case ex: Exception =>
-        LOG.error("Something went wrong while reading %s%s".format(dfsUri, location))
-        throw ex
-    }
-  }
-
-  /**
-   * * Loads a NetCDF Dataset from HDFS.
-   *
-   * @param dfsUri     HDFS URI(eg. hdfs://master:9000/)
-   * @param location   File path on HDFS
-   * @param bufferSize The size of the buffer to be used
-   * @param tmpPath    local tmp dir
-   */
-  def loadDFSNetCDFDataSetWithLocalTmpFile(dfsUri: String, location: String,
-      bufferSize: Int, tmpPath: String): NetcdfDataset = {
-    NetcdfDataset.setUseNaNs(false)
-    try {
-      val raf = new HDFSRandomAccessFileWithLocalTmpFile(dfsUri, location, bufferSize, tmpPath)
       new NetcdfDataset(NetcdfFile.open(raf, location, null, null))
     } catch {
       case e: java.io.IOException =>

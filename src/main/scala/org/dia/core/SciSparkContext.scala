@@ -17,20 +17,22 @@
  */
 package org.dia.core
 
+import java.io.File
 import java.net.URI
 
 import scala.collection.mutable
 import scala.io.Source
 
-import org.apache.hadoop.conf._
+import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.FileSystem
 import org.apache.hadoop.fs.Path
 import org.apache.log4j.LogManager
 
-import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame}
+import org.apache.spark.SparkConf
+import org.apache.spark.SparkContext
+import org.apache.spark.sql.DataFrame
 
 import org.dia.Constants._
 import org.dia.loaders.MergReader._
@@ -212,6 +214,29 @@ class SciSparkContext (@transient val sparkContext: SparkContext) extends Serial
     rdd
   }
 
+  def netcdfRandomAccessDatasetsWithLocalTmpFile(
+      path: String,
+      varNames: List[String] = Nil,
+      partitions: Int = defaultPartitions): RDD[SciDataset] = {
+    val fs = FileSystem.get(new URI(path), new Configuration())
+    val fileStatuses = fs.listStatus(new Path(path))
+    val filesRDD = sparkContext.parallelize(fileStatuses, partitions)
+    val localTmp = sparkContext.getConf.get("spark.local.dir", "/tmp")
+    filesRDD.map(fileStatus => {
+      val _fs = FileSystem.get(new URI(path), new Configuration())
+      val localFile = new File(localTmp + "/" + fileStatus.getPath.getName)
+      _fs.copyToLocalFile(false, fileStatus.getPath, new Path(localFile.getAbsolutePath), true)
+      val dataset = loadNetCDFFileLocal(localFile)
+      localFile.delete()
+      varNames match {
+        case Nil => new SciDataset(dataset)
+        case s => new SciDataset(dataset, varNames)
+      }
+
+    })
+  }
+
+
   /**
    * Constructs an SRDD from a file of URI's pointing to NetCDF datasets and a list of variable names.
    * If no names are provided then all variable arrays in the file are loaded.
@@ -237,31 +262,6 @@ class SciSparkContext (@transient val sparkContext: SparkContext) extends Serial
     })
   }
 
-  /**
-   * Constructs an SRDD from a file of URI's pointing to NetCDF datasets and a list of variable names.
-   *  If no names are provided then all variable arrays in the file are loaded.
-   * The URI could be an OpenDapURL or a filesystem path.
-   *
-   * For reading from HDFS check NetcdfDFSFile.
-   */
-  def netcdfRandomAccessDatasetsWithLocalTmpFile(
-      path: String,
-      varName: List[String] = Nil,
-      partitions: Int = defaultPartitions): RDD[SciDataset] = {
-
-    val fs = FileSystem.get(new URI(path), new Configuration())
-    val FileStatuses = fs.listStatus(new Path(path))
-    val fileNames = FileStatuses.map(p => Path.getPathWithoutSchemeAndAuthority(p.getPath).toString)
-    val nameRDD = sparkContext.parallelize(fileNames, partitions)
-    val tmpPath = sparkContext.getConf.get("spark.local.dir", "/tmp")
-    nameRDD.map(fileName => {
-      val k = NetCDFUtils.loadDFSNetCDFDataSetWithLocalTmpFile(path, fileName, 4000, tmpPath)
-      varName match {
-        case Nil => new SciDataset (k)
-        case s : List[String] => new SciDataset(k, s)
-      }
-    })
-  }
 
   /**
    * Constructs an RDD given a URI pointing to an HDFS directory of Netcdf files and a list of variable names.
@@ -398,7 +398,7 @@ class SciSparkContext (@transient val sparkContext: SparkContext) extends Serial
   /**
    * Reads data from WWLLN files into a SQL Dataframe and broadcasts this DF
    * @param WWLLNpath Path on HDFS to the data
-   * @param paritions The number of paritions to use
+   * @param partitions The number of paritions to use
    * return DataFrame with all the WWLLN data at the location provided
    */
   def readWWLLNData(WWLLNpath: String, partitions: Integer): Broadcast[DataFrame] = {

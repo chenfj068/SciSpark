@@ -17,6 +17,8 @@
  */
 package org.dia.loaders
 
+import java.io.File
+
 import org.slf4j.Logger
 import ucar.nc2.NetcdfFile
 import ucar.nc2.dataset.NetcdfDataset
@@ -107,5 +109,15 @@ object NetCDFReader {
   def loadNetCDFFile(name: String, file: Array[Byte]): NetcdfDataset = {
     new NetcdfDataset(NetcdfFile.openInMemory(name, file))
   }
+
+  /**
+   * Loads the NetCDF file from local
+   * @param file the file to be loaded
+   * @return
+   */
+  def loadNetCDFFileLocal(file: File): NetcdfDataset = {
+    new NetcdfDataset(NetcdfFile.open(file.getAbsolutePath))
+  }
+
 
 }

@@ -96,6 +96,7 @@ libraryDependencies ++= Seq(
   "joda-time" % "joda-time" % "2.8.1",
   "org.joda" % "joda-convert" % "1.8.1",
   "com.joestelmach" % "natty" % "0.11",
+  "edu.ucar" % "grib" % "4.6.0",
   "edu.ucar" % "cdm" % "4.6.0"
 )
 
