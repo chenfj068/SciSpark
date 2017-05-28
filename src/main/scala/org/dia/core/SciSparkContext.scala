@@ -227,12 +227,14 @@ class SciSparkContext (@transient val sparkContext: SparkContext) extends Serial
       val localFile = new File(localTmp + "/" + fileStatus.getPath.getName)
       _fs.copyToLocalFile(false, fileStatus.getPath, new Path(localFile.getAbsolutePath), true)
       val dataset = loadNetCDFFileLocal(localFile)
-      localFile.delete()
-      varNames match {
-        case Nil => new SciDataset(dataset)
-        case s => new SciDataset(dataset, varNames)
+      try{
+        varNames match {
+          case Nil => new SciDataset(dataset)
+          case s => new SciDataset(dataset, varNames)
+        }
+      } finally {
+        localFile.delete()
       }
-
     })
   }
 
