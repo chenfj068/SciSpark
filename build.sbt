@@ -46,6 +46,7 @@ scalacOptions := Seq("-feature", "-deprecation")
 mainClass in (Compile, packageBin) := Some("org.dia.apps.MCCApp")
 
 resolvers ++= Seq(
+  Resolver.bintrayIvyRepo("com.eed3si9n", "sbt-plugins"),
   Resolver.mavenLocal,
   Resolver.file("Local", file(Path.userHome.absolutePath + "/.ivy2/local"))(Resolver.ivyStylePatterns),
   "maven Repository" at "http://artifacts.unidata.ucar.edu/content/repositories/unidata-releases/"
