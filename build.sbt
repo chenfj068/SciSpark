@@ -91,8 +91,8 @@ libraryDependencies ++= Seq(
   "org.scalanlp" %% "breeze-natives" % "0.11.2",
   // Nd4j scala api with netlib-blas backend
   // "org.nd4j" % "nd4s_2.10" % "0.5.0",
-  "org.nd4j" % "nd4j-native-platform" % "0.5.0",
-  "org.nd4j" %% "nd4j-kryo" % "0.5.0",
+  "org.nd4j" % "nd4j-native-platform" % "0.5.0" exclude("org.apache.commons", "commons-lang3"),
+  "org.nd4j" %% "nd4j-kryo" % "0.5.0" exclude("org.apache.commons", "commons-lang3"),
   "edu.ucar" % "opendap" % "4.6.0",
   "joda-time" % "joda-time" % "2.8.1",
   "org.joda" % "joda-convert" % "1.8.1",
