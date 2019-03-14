@@ -27,7 +27,7 @@ val sversion = scalaVersionParameterOption match {
 
 val sparkVersion = sparkVersionParameterOption match {
   case Some(x) => x
-  case None => "2.1.0"
+  case None => "2.1.3"
 }
 
 assemblyJarName in assembly := "SciSpark.jar"
